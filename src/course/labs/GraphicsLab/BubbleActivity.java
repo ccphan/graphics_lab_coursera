@@ -138,9 +138,25 @@ public class BubbleActivity extends Activity {
 				// TODO - Implement onFling actions.
 				// You can get all Views in mFrame using the
 				// ViewGroup.getChildCount() method
+				int numberOfBubbles = mFrame.getChildCount();
+				float event_x = event1.getRawX();
+				float event_y = event1.getRawY();
+				
+				if (numberOfBubbles > 0) {
 
-				
-				
+					for (int i = 0; i < numberOfBubbles; i++) {
+						BubbleView bubble = (BubbleView) mFrame.getChildAt(i);
+
+						if (bubble.intersects(event1.getRawX(),
+										event1.getRawY())) {
+							// hit a bubble, fling it
+							bubble.deflect(velocityX, velocityY);
+							bubble.start();
+							return true;
+
+						}
+					}
+				}
 				
 				return false;
 				
@@ -179,6 +195,9 @@ public class BubbleActivity extends Activity {
 							// hit a bubble, pop it
 							bubble.stop(true);
 							not_pop_event = false;
+							
+							log("Total number of bubbles " + numberOfBubbles);
+							return true;
 
 						}
 					}
@@ -192,9 +211,13 @@ public class BubbleActivity extends Activity {
 					// remember to add the view to the parent frame
 					mFrame.addView(new_bubble);
 					new_bubble.start();
+					
+					numberOfBubbles++;
+					log("Total number of bubbles " + numberOfBubbles);
+					return true;
 				}
 				
-				log("Total number of bubbles " + numberOfBubbles);
+				
 
 				
 				return false;
@@ -314,14 +337,11 @@ public class BubbleActivity extends Activity {
 				// TODO - Set movement direction and speed
 				// Limit movement speed in the x and y
 				// direction to [-3..3].
+				mDx = r.nextInt(7) - 3;
+				mDy = r.nextInt(7) - 3;
 
-
-			
-			
-			
-			
-			
 			}
+			
 		}
 
 		private void createScaledBitmap(Random r) {
@@ -362,9 +382,18 @@ public class BubbleActivity extends Activity {
 					// stop the BubbleView's Worker Thread. 
 					// Otherwise, request that the BubbleView be redrawn. 
 					
+					// Setup volicity and direction
+					mXPos += mDx;
+					mYPos += mDy;
+					
 					// invalidates current view and calls onDraw
 					//postInvalidate();
+					
+					if (moveWhileOnScreen()) {
 					BubbleView.this.postInvalidate();
+					} else {
+						BubbleView.this.stop(true);
+					}
 					
 
 					
@@ -403,25 +432,21 @@ public class BubbleActivity extends Activity {
 				mFrame.post(new Runnable() {
 					@Override
 					public void run() {
-						
+
 						// TODO - Remove the BubbleView from mFrame
 						mFrame.removeView(BubbleView.this);
-						mSoundPool.play(mSoundID, 0.5f, 0.5f, 0, 0, 1.0f);
 
-
-						
-						
 						if (popped) {
 							log("Pop!");
 
 							// TODO - If the bubble was popped by user,
 							// play the popping sound
+							mSoundPool.play(mSoundID, 0.5f, 0.5f, 0, 0, 1.0f);
 
-						
 						}
 
 						log("Bubble removed from view!");
-					
+
 					}
 				});
 			}
@@ -433,8 +458,9 @@ public class BubbleActivity extends Activity {
 
 			//TODO - set mDx and mDy to be the new velocities divided by the REFRESH_RATE
 			
-			mDx = 0;
-			mDy = 0;
+			mDx = velocityX/REFRESH_RATE;
+			mDy = velocityY/REFRESH_RATE;
+			
 
 		}
 
@@ -475,18 +501,23 @@ public class BubbleActivity extends Activity {
 			// TODO - Move the BubbleView
 			// Returns true if the BubbleView has exited the screen
 
-
-			
-			
-			return false;
+			if (isOutOfView()) {
+				return false;
+			} else {
+				return true;
+			}
 
 		}
 
 		private boolean isOutOfView() {
 
 			// TODO - Return true if the BubbleView has exited the screen
-
-			return false;
+			if (mXPos > mDisplayWidth || mXPos < 0
+					|| mYPos > mDisplayHeight || mYPos < 0) {
+				return true;
+			} else {
+				return false;
+			}
 
 		}
 	}
